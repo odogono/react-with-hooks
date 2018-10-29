@@ -55,7 +55,7 @@ test('useEffect clean up', () => {
   const wrapper = mount(<Counter />);
   expect(count).toBe(1);
   wrapper.setProps({});
-  expect(count).toBe(6);
+  expect(count).toBe(2);
   wrapper.unmount();
   expect(count).toBe(5);
 });
@@ -73,7 +73,7 @@ test('useEffect deps', () => {
   });
   const wrapper = mount(<Counter step={1} />);
   expect(count).toBe(1);
-  wrapper.setProps({});
+  wrapper.setProps({props:0});
   expect(count).toBe(1);
   wrapper.setProps({ step: 2 });
   expect(count).toBe(3);
@@ -88,10 +88,44 @@ test('useEffect empty deps', () => {
     return <div>{count}</div>;
   });
   const wrapper = mount(<Counter />);
-  expect(count).toBe(1);
+  expect(count).toBe(0);
   wrapper.setProps({});
   expect(count).toBe(1);
 });
+
+
+test('useEffect firing', () => {
+  let count = 0;
+  let cleanupCount = 0;
+
+  const Counter = withHooks(() => {
+    useEffect(() => {
+      count++;
+      return () => { 
+        cleanupCount++ 
+      }
+    }, []);
+
+    return <div>{count}</div>;
+  });
+  const wrapper = mount( <Counter /> );
+
+  expect( count ).toBe(0);
+  expect( cleanupCount ).toBe(0);
+  
+  wrapper.setProps({});
+  expect( count ).toBe(1);
+  expect( cleanupCount ).toBe(0);
+
+  wrapper.setProps({});
+  expect( count ).toBe(1);
+  expect( cleanupCount ).toBe(0);
+
+  wrapper.unmount();
+
+  expect( count ).toBe(1);
+  expect( cleanupCount ).toBe(1);
+})
 
 test('useContext', () => {
   const CounterContext = createContext();
@@ -175,7 +209,7 @@ test('useRef', () => {
 
     useEffect(() => {
       ref.current = 1;
-    }, [])
+    })
 
     return (
       <div>{ref.current}</div>

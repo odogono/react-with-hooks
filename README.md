@@ -5,13 +5,13 @@ Ponyfill for the [proposed React Hooks API](https://reactjs.org/docs/hooks-intro
 ## Install
 
 ```bash
-$ npm i react-with-hooks --save
+$ npm i odgn-react-with-hooks --save
 ```
 
 ## Example
 
 ```javascript
-import withHooks, { useState, useEffect } from 'react-with-hooks';
+import withHooks, { useState, useEffect } from 'odgn-react-with-hooks';
 
 const Counter = withHooks(() => {
   const [ count, setCount ] = useState(0);

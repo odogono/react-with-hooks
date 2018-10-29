@@ -23,7 +23,11 @@ export function useState(initial) {
 
 export function useEffect(rawEffect, deps) {
   const id = ++callIndex;
+
+  const fireEffectOnMountOnly = Array.isArray(deps) && deps.length === 0;
+  
   if (isMounting) {
+
     const injectedCleanup = () => {
       const { current } = injectedCleanup;
       if (current) {
@@ -32,30 +36,40 @@ export function useEffect(rawEffect, deps) {
       }
     };
     const injectedEffect = () => {
-      injectedCleanup();
+      // injectedCleanup();
       const { current } = injectedEffect;
       if (current) {
         injectedCleanup.current = current();
       }
+      if( fireEffectOnMountOnly ){
+        injectedEffect.current = null;
+      }
     };
-    injectedEffect.current = rawEffect;
 
+    injectedEffect.current = rawEffect;
+    
     currentInstance._hookStore[id] = {
       effect: injectedEffect,
       cleanup: injectedCleanup,
       deps
     };
 
-    injectEffect('componentDidMount', injectedEffect);
-    injectEffect('componentWillUnmount', injectedCleanup);
+    if( !fireEffectOnMountOnly ){
+      injectEffect('componentDidMount', injectedEffect);
+      // injectEffect('componentWillUpdate', injectedCleanup);
+    }
+    
     injectEffect('componentDidUpdate', injectedEffect);
-    injectEffect('componentWillUpdate', injectedCleanup);
+    injectEffect('componentWillUnmount', injectedCleanup);
   } else {
     const { effect, deps: prevDeps = [] } = currentInstance._hookStore[id];
-    if (!deps || deps.some((d, i) => d !== prevDeps[i])) {
-      effect.current = rawEffect;
-    } else {
-      effect.current = null;
+    
+    if( !fireEffectOnMountOnly ){
+      if (!deps || fireEffectOnMountOnly || deps.some((d, i) => d !== prevDeps[i])) {
+        effect.current = rawEffect;
+      } else {
+        effect.current = null;
+      }
     }
   }
 }
